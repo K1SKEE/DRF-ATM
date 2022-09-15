@@ -1,0 +1,7 @@
+.DS_Store
+db.sqlite3
+atm/__pycache__/
+drf_atm/__pycache__/
+atm/migrations/
+atm/migrations/__pycache__/
+.env
