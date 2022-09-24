@@ -36,11 +36,16 @@ class UserChangePinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        fields = ('password', 'pin1', 'pin2')
 
     def update(self, instance, validated_data):
-        instance.change_pin(**validated_data)
+        result = instance.change_pin(
+            validated_data['password'],
+            validated_data['pin1'],
+            validated_data['pin2']
+        )
         instance.save()
-        return instance
+        return result
 
 
 class UserIsOwnerDetailSerializer(serializers.ModelSerializer):
@@ -50,5 +55,6 @@ class UserIsOwnerDetailSerializer(serializers.ModelSerializer):
 
 
 class WalletSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        pass
 # user = serializers.HiddenField(default=serializers.CurrentUserDefault)

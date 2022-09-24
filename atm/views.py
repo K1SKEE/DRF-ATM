@@ -35,12 +35,17 @@ class UserRegisterAPIView(generics.CreateAPIView):
         })
 
 
-class UserIsOwnerChangePin(generics.UpdateAPIView):
+class UserIsOwnerChangePin(generics.UpdateAPIView, generics.GenericAPIView):
     serializer_class = UserChangePinSerializer
     permission_classes = (IsOwnerAccount,)
 
     def put(self, request, *args, **kwargs):
-        pass
+        user = self.request.user.pk
+        instance = User.objects.get(pk=user)
+        serializer = UserChangePinSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.update(instance, serializer.validated_data)
+        return Response({'result': result})
 
 
 class UserIsOwnerViewSet(viewsets.ModelViewSet):

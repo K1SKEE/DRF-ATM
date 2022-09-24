@@ -290,7 +290,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.iban = iban
         return self.iban
 
-    def change_pin(self, pin1, pin2):
+    def change_pin(self, current_pin, pin1, pin2):
+        if not self.check_password(current_pin):
+            return f'Поточний PIN-код неправильний'
         if pin1 == pin2:
             self.set_password(pin2)
             self.save()

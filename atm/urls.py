@@ -10,5 +10,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', UserIsOwnerViewSet.as_view({'get': 'retrieve'})),
     path('register/', UserRegisterAPIView.as_view()),
+    path('change-pin/', UserIsOwnerChangePin.as_view()),
 
 ]
