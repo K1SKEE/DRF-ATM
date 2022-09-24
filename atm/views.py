@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from .serializers import *
-from .permissions import IsOwnerAccount
+from .permissions import IsOwnerAccount, IsAnonymous
 from .models import *
 
 
@@ -18,8 +18,29 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class UserCreateAPIView(generics.CreateAPIView):
-    serializer_class = UserCreateSerializer
+class UserRegisterAPIView(generics.CreateAPIView):
+    serializer_class = UserRegisterSerializer
+    permission_classes = (IsAnonymous,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = UserRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.create(serializer.data)
+        return Response({
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'phone_number': user.phone_number,
+            'login': user.username,
+            'pin': '0000'
+        })
+
+
+class UserIsOwnerChangePin(generics.UpdateAPIView):
+    serializer_class = UserChangePinSerializer
+    permission_classes = (IsOwnerAccount,)
+
+    def put(self, request, *args, **kwargs):
+        pass
 
 
 class UserIsOwnerViewSet(viewsets.ModelViewSet):

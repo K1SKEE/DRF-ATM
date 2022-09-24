@@ -129,7 +129,7 @@ class Card(models.Model):
         default=0,
         verbose_name='Баланс карти'
     )
-    user = models.ForeignKey('User', on_delete=models.PROTECT)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.currency} {self.card_number}'

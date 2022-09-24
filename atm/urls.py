@@ -9,6 +9,6 @@ router.register(r'user', UserViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('', UserIsOwnerViewSet.as_view({'get': 'retrieve'})),
-    path('create-user/', UserCreateAPIView.as_view()),
+    path('register/', UserRegisterAPIView.as_view()),
 
 ]

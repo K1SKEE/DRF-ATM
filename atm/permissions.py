@@ -6,3 +6,8 @@ class IsOwnerAccount(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return bool(request.user and request.user.is_authenticated)
         return obj == request.user
+
+
+class IsAnonymous(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(not request.user.is_authenticated)

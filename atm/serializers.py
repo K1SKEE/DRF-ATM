@@ -16,7 +16,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'phone_number')
@@ -30,9 +30,25 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserChangePinSerializer(serializers.ModelSerializer):
+    pin1 = serializers.CharField(max_length=4, min_length=4)
+    pin2 = serializers.CharField(max_length=4, min_length=4)
+
+    class Meta:
+        model = User
+
+    def update(self, instance, validated_data):
+        instance.change_pin(**validated_data)
+        instance.save()
+        return instance
+
+
 class UserIsOwnerDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('iban', 'username', 'last_name', 'first_name', 'phone_number')
 
+
+class WalletSerializer(serializers.ModelSerializer):
+    pass
 # user = serializers.HiddenField(default=serializers.CurrentUserDefault)
