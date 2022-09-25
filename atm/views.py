@@ -35,12 +35,12 @@ class UserRegisterAPIView(generics.CreateAPIView):
         })
 
 
-class UserIsOwnerChangePin(generics.UpdateAPIView, generics.GenericAPIView):
+class UserIsOwnerChangePin(generics.UpdateAPIView):
     serializer_class = UserChangePinSerializer
     permission_classes = (IsOwnerAccount,)
 
     def put(self, request, *args, **kwargs):
-        user = self.request.user.pk
+        user = request.user.pk
         instance = User.objects.get(pk=user)
         serializer = UserChangePinSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -53,9 +53,26 @@ class UserIsOwnerViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerAccount,)
 
     def retrieve(self, request, *args, **kwargs):
-        try:
-            queryset = User.objects.get(pk=self.request.user.pk)
-        except models.ObjectDoesNotExist:
-            return Response({'error': 'error'})
+        queryset = User.objects.get(pk=request.user.pk)
         serializer = UserIsOwnerDetailSerializer(queryset)
         return Response(serializer.data)
+
+
+class UserWalletListAPIView(generics.ListAPIView):
+    serializer_class = WalletSerializer
+    permission_classes = (IsOwnerAccount,)
+
+    def get_queryset(self):
+        return Card.objects.filter(user=self.request.user)
+
+
+class CardCreateAPIView(generics.CreateAPIView):
+    serializer_class = CardCreateSerializer
+    permission_classes = (IsOwnerAccount,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = CardCreateSerializer(data=request.data,
+                                          context={'request': request})
+        serializer.is_valid(raise_exception=False)
+        result = serializer.create(serializer.validated_data)
+        return Response({'result': result})

@@ -11,6 +11,10 @@ class UserListSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    wallet = serializers.SlugRelatedField(
+        slug_field='card_number', read_only=True, many=True
+    )
+
     class Meta:
         model = User
         exclude = ('password',)
@@ -49,12 +53,29 @@ class UserChangePinSerializer(serializers.ModelSerializer):
 
 
 class UserIsOwnerDetailSerializer(serializers.ModelSerializer):
+    wallet = serializers.SlugRelatedField(
+        slug_field='card_number', read_only=True, many=True
+    )
+
     class Meta:
         model = User
-        fields = ('iban', 'username', 'last_name', 'first_name', 'phone_number')
+        fields = ('iban', 'username', 'last_name', 'first_name', 'phone_number',
+                  'wallet')
 
 
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
-        pass
-# user = serializers.HiddenField(default=serializers.CurrentUserDefault)
+        model = Card
+        fields = '__all__'
+
+
+class CardCreateSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Card
+        fields = ('currency', 'user')
+
+    def create(self, validated_data):
+        card = Card.objects.create(validated_data)
+        return f'Нова карта {card.card_number} {card.currency} створена'

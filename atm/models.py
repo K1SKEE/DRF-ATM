@@ -48,6 +48,14 @@ class UserManager(BaseUserManager):
         return card.card_number
 
 
+class CardManager(models.Manager):
+    def create(self, kwargs):
+        card = self.model(**kwargs)
+        card.create_card()
+        card.save()
+        return card
+
+
 class ATM(models.Model):
     objects = models.Manager()
     balance = models.PositiveIntegerField(
@@ -113,7 +121,7 @@ class Card(models.Model):
         ('USD', 'Долар США'),
         ('EUR', 'Євро'),
     ]
-    objects = models.Manager()
+    objects = CardManager()
     card_number = models.CharField(
         max_length=16,
         unique=True, primary_key=True,
@@ -129,7 +137,8 @@ class Card(models.Model):
         default=0,
         verbose_name='Баланс карти'
     )
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE,
+                             related_name='wallet')
 
     def __str__(self):
         return f'{self.currency} {self.card_number}'
@@ -272,6 +281,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
+
+    def __str__(self):
+        return self.iban
 
     def create_username(self):
         random_card = [str(randint(0, 9)) for _ in range(12)]
