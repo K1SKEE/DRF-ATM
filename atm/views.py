@@ -1,4 +1,6 @@
+from django.http import Http404
 from rest_framework import generics, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
@@ -58,21 +60,66 @@ class UserIsOwnerViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class UserWalletListAPIView(generics.ListAPIView):
-    serializer_class = WalletSerializer
+class UserWalletViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerAccount,)
 
     def get_queryset(self):
         return Card.objects.filter(user=self.request.user)
 
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CardCreateSerializer
+        return WalletSerializer
 
-class CardCreateAPIView(generics.CreateAPIView):
-    serializer_class = CardCreateSerializer
-    permission_classes = (IsOwnerAccount,)
-
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         serializer = CardCreateSerializer(data=request.data,
                                           context={'request': request})
         serializer.is_valid(raise_exception=False)
         result = serializer.create(serializer.validated_data)
         return Response({'result': result})
+
+    @action(methods=['POST'], detail=False)
+    def balance(self, request):
+        serializer = CardBalanceSerializer(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = Card.objects.get(card_number=serializer.data.get('card'))
+        if instance.user == request.user:
+            result = serializer.get_balance(instance)
+            return Response({'result': result})
+        raise Http404
+
+    @action(methods=['PUT'], detail=False)
+    def deposit(self, request):
+        serializer = CardDepositSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = Card.objects.get(card_number=serializer.data.get('card'))
+        if instance.user == request.user:
+            result = serializer.update(instance, serializer.validated_data)
+            return Response({'result': result})
+        raise Http404
+
+    @action(methods=['PUT'], detail=False)
+    def withdraw(self, request):
+        serializer = CardWithdrawSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = Card.objects.get(card_number=serializer.data.get('card'))
+        if instance.user == request.user:
+            result = serializer.update(instance, serializer.validated_data)
+            return Response({'result': result})
+        raise Http404
+
+
+class CardBalanceAPIView(generics.CreateAPIView):
+    permission_classes = (IsOwnerAccount,)
+    serializer_class = CardBalanceSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = CardBalanceSerializer(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = Card.objects.get(card_number=serializer.data.get('card'))
+        if instance.user == request.user:
+            result = serializer.get_balance(instance)
+            return Response({'result': result})
+        raise Http404

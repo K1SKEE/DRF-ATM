@@ -79,3 +79,47 @@ class CardCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         card = Card.objects.create(validated_data)
         return f'Нова карта {card.card_number} {card.currency} створена'
+
+
+class CardBalanceSerializer(serializers.ModelSerializer):
+    # wallet = serializers.PrimaryKeyRelatedField(
+    #     queryset=Card.objects.filter(),
+    # )
+
+    card = serializers.CharField(max_length=16, min_length=16)
+
+    class Meta:
+        model = Card
+        fields = ('card',)
+
+    @staticmethod
+    def get_balance(instance):
+        return instance.get_balance()
+
+
+class CardDepositSerializer(serializers.ModelSerializer):
+    card = serializers.CharField(max_length=16, min_length=16)
+    deposit = serializers.IntegerField()
+
+    class Meta:
+        model = Card
+        fields = ('card', 'deposit')
+
+    def update(self, instance, validated_data):
+        result = instance.deposit(validated_data['deposit'])
+        instance.save()
+        return result
+
+
+class CardWithdrawSerializer(serializers.ModelSerializer):
+    card = serializers.CharField(max_length=16, min_length=16)
+    withdraw = serializers.IntegerField()
+
+    class Meta:
+        model = Card
+        fields = ('card', 'withdraw')
+
+    def update(self, instance, validated_data):
+        result = instance.withdraw(validated_data['withdraw'])
+        instance.save()
+        return result
