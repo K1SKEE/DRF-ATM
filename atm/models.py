@@ -205,19 +205,19 @@ class Card(models.Model):
 
     @staticmethod
     def exchange(value, sender_card, receiver_card):
-        from atm.utils import DataMixin
+        from atm.utils import get_currency_rate
         if sender_card.currency == 'UAH':
             if receiver_card.currency == 'USD':
-                return value / float(DataMixin.get_currency_rate()['usd_buy'])
-            return value / float(DataMixin.get_currency_rate()['eur_buy'])
+                return value / float(get_currency_rate()['usd_buy'])
+            return value / float(get_currency_rate()['eur_buy'])
         elif sender_card.currency == 'USD':
             if receiver_card.currency == 'EUR':
-                return value / float(DataMixin.get_currency_rate()['eur_buy'])
-            return value * float(DataMixin.get_currency_rate()['usd_sale'])
+                return value / float(get_currency_rate()['eur_buy'])
+            return value * float(get_currency_rate()['usd_sale'])
         else:
             if receiver_card.currency == 'UAH':
-                return value * float(DataMixin.get_currency_rate()['eur_sale'])
-            return value * float(DataMixin.get_currency_rate()['usd_sale'])
+                return value * float(get_currency_rate()['eur_sale'])
+            return value * float(get_currency_rate()['usd_sale'])
 
 
 class User(AbstractBaseUser, PermissionsMixin):

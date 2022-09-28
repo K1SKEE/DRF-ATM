@@ -82,10 +82,6 @@ class CardCreateSerializer(serializers.ModelSerializer):
 
 
 class CardBalanceSerializer(serializers.ModelSerializer):
-    # wallet = serializers.PrimaryKeyRelatedField(
-    #     queryset=Card.objects.filter(),
-    # )
-
     card = serializers.CharField(max_length=16, min_length=16)
 
     class Meta:
@@ -123,3 +119,27 @@ class CardWithdrawSerializer(serializers.ModelSerializer):
         result = instance.withdraw(validated_data['withdraw'])
         instance.save()
         return result
+
+
+class CardSendMoneySerializer(serializers.ModelSerializer):
+    card_sender = serializers.CharField(max_length=16, min_length=16)
+    card_receiver = serializers.CharField(max_length=16, min_length=16)
+    send_money = serializers.IntegerField()
+
+    class Meta:
+        model = Card
+        fields = ('card_sender', 'card_receiver', 'send_money')
+
+    def update(self, instance, validated_data):
+        receiver = Card.objects.get(card_number=validated_data['card_receiver'])
+        result = instance.send_money(
+            validated_data['send_money'],
+            receiver
+        )
+        return result
+
+
+class TransactionListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        exclude = ('id', 'user')

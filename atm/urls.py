@@ -10,8 +10,8 @@ router.register(r'wallet', UserWalletViewSet, basename='wallet')
 urlpatterns = [
     path('', include(router.urls)),
     path('', UserIsOwnerViewSet.as_view({'get': 'retrieve'})),
-    path('balance/', CardBalanceAPIView.as_view()),
+    path('log/', TransactionListAPIView.as_view()),
     path('register/', UserRegisterAPIView.as_view()),
     path('change-pin/', UserIsOwnerChangePin.as_view()),
-
+    path('currency-rate/', CurrencyRate.as_view()),
 ]
