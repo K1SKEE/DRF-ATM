@@ -1,6 +1,9 @@
 import requests
+
 from django.http import Http404
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+
 from .serializers import *
 
 
@@ -19,6 +22,10 @@ def get_currency_rate():
         'eur_sale': eur_sale
     }
     return rates
+
+
+class TransactionPagination(PageNumberPagination):
+    page_size = 10
 
 
 class ViewSetMixin:

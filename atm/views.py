@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from .serializers import *
 from .permissions import IsOwnerAccount, IsAnonymous
 from .models import *
-from .utils import ViewSetMixin
+from .utils import ViewSetMixin, TransactionPagination, get_currency_rate
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -17,7 +17,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
 
     def list(self, request, *args, **kwargs):
-        queryset = User.objects.all()
+        queryset = self.get_queryset()
         serializer = UserListSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -66,7 +66,8 @@ class UserWalletViewSet(ViewSetMixin, viewsets.ModelViewSet):
     permission_classes = (IsOwnerAccount,)
 
     def get_queryset(self):
-        return Card.objects.filter(user=self.request.user)
+        user = self.request.user
+        return user.wallet.all()
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -107,13 +108,16 @@ class UserWalletViewSet(ViewSetMixin, viewsets.ModelViewSet):
 class TransactionListAPIView(generics.ListAPIView):
     permission_classes = (IsOwnerAccount,)
     serializer_class = TransactionListSerializer
+    pagination_class = TransactionPagination
 
     def get_queryset(self):
-        return Transaction.objects.filter(user=self.request.user)
+        user = self.request.user
+        return user.transaction.all()
 
 
 class CurrencyRate(APIView):
     @staticmethod
     def get(request):
-        from .utils import get_currency_rate
+        currency_rate = get_currency_rate()
+        print(currency_rate['usd_buy'])
         return Response(get_currency_rate())

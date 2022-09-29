@@ -100,11 +100,12 @@ class Transaction(models.Model):
         null=True,
         verbose_name='Отримувач'
     )
-    value = models.PositiveIntegerField(
+    value = models.FloatField(
         verbose_name='Сума'
     )
     user = models.ForeignKey(
-        'User', on_delete=models.PROTECT
+        'User', on_delete=models.CASCADE,
+        related_name='transaction'
     )
 
     class Meta:
@@ -133,7 +134,7 @@ class Card(models.Model):
         default='UAH',
         verbose_name='Валюта карти'
     )
-    balance = models.PositiveIntegerField(
+    balance = models.FloatField(
         default=0,
         verbose_name='Баланс карти'
     )
@@ -206,18 +207,25 @@ class Card(models.Model):
     @staticmethod
     def exchange(value, sender_card, receiver_card):
         from atm.utils import get_currency_rate
-        if sender_card.currency == 'UAH':
-            if receiver_card.currency == 'USD':
-                return value / float(get_currency_rate()['usd_buy'])
-            return value / float(get_currency_rate()['eur_buy'])
-        elif sender_card.currency == 'USD':
-            if receiver_card.currency == 'EUR':
-                return value / float(get_currency_rate()['eur_buy'])
-            return value * float(get_currency_rate()['usd_sale'])
-        else:
-            if receiver_card.currency == 'UAH':
-                return value * float(get_currency_rate()['eur_sale'])
-            return value * float(get_currency_rate()['usd_sale'])
+        currency_rate = get_currency_rate()
+        exchanger = {
+            'UAH': {
+                'USD': lambda: value / float(currency_rate['usd_sale']),
+                'EUR': lambda: value / float(currency_rate['eur_sale'])
+            },
+            'USD': {
+                'EUR': lambda: ((currency_rate['usd_sale'] * value) /
+                                currency_rate['eur_buy']),
+                'UAH': lambda: value * float(currency_rate['usd_buy'])
+            },
+            'EUR': {
+                'USD': lambda: ((currency_rate['eur_buy'] * value) /
+                                currency_rate['usd_sale']),
+                'UAH': lambda: value * float(currency_rate['eur_buy'])
+            }
+        }
+        result = exchanger[sender_card.currency][receiver_card.currency]()
+        return round(result, 2)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
