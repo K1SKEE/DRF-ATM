@@ -35,8 +35,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 
 class UserChangePinSerializer(serializers.ModelSerializer):
-    pin1 = serializers.CharField(max_length=4, min_length=4)
-    pin2 = serializers.CharField(max_length=4, min_length=4)
+    pin1 = serializers.CharField(max_length=4, min_length=4,
+                                 style={'input_type': 'password'})
+    pin2 = serializers.CharField(max_length=4, min_length=4,
+                                 style={'input_type': 'password'})
 
     class Meta:
         model = User

@@ -39,27 +39,28 @@ class UserRegisterAPIView(generics.CreateAPIView):
         })
 
 
-class UserIsOwnerChangePin(generics.UpdateAPIView):
-    serializer_class = UserChangePinSerializer
+class UserIsOwnerViewSet(generics.RetrieveUpdateAPIView):
     permission_classes = (IsOwnerAccount,)
 
-    def put(self, request, *args, **kwargs):
-        user = request.user.pk
-        instance = User.objects.get(pk=user)
+    def get_queryset(self):
+        return self.request.user
+
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == 'PUT':
+            return UserChangePinSerializer(*args)
+        return UserIsOwnerDetailSerializer(*args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_queryset()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_queryset()
         serializer = UserChangePinSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         result = serializer.update(instance, serializer.validated_data)
         return Response({'result': result})
-
-
-class UserIsOwnerViewSet(viewsets.ModelViewSet):
-    serializer_class = UserIsOwnerDetailSerializer
-    permission_classes = (IsOwnerAccount,)
-
-    def retrieve(self, request, *args, **kwargs):
-        queryset = User.objects.get(pk=request.user.pk)
-        serializer = UserIsOwnerDetailSerializer(queryset)
-        return Response(serializer.data)
 
 
 class UserWalletViewSet(ViewSetMixin, viewsets.ModelViewSet):
@@ -77,7 +78,7 @@ class UserWalletViewSet(ViewSetMixin, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = CardCreateSerializer(data=request.data,
                                           context={'request': request})
-        serializer.is_valid(raise_exception=False)
+        serializer.is_valid(raise_exception=True)
         result = serializer.create(serializer.validated_data)
         return Response({'result': result})
 
@@ -100,7 +101,7 @@ class UserWalletViewSet(ViewSetMixin, viewsets.ModelViewSet):
     def withdraw(self, request):
         return self.put_mixin(request, CardWithdrawSerializer, 'card')
 
-    @action(methods=['PUT'], detail=False)
+    @action(methods=['PUT'], detail=False, url_path='send-money')
     def send_money(self, request):
         return self.put_mixin(request, CardSendMoneySerializer, 'card_sender')
 
@@ -119,5 +120,4 @@ class CurrencyRate(APIView):
     @staticmethod
     def get(request):
         currency_rate = get_currency_rate()
-        print(currency_rate['usd_buy'])
-        return Response(get_currency_rate())
+        return Response(currency_rate)
